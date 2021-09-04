@@ -12,8 +12,10 @@ namespace Desafio.Domain.Interfaces.Services
         Task<Result<List<AccountResponse>>> GetAll();
         Task<Result<AccountResponse>> GetById(Guid id);
         Task<Result<AccountResponse>> Create(CreateAccountRequest request);
-        //Task<Result<AccountResponse>> Update(Guid id, UpdateAccountRequest request);
         Task<Result<ExtractResponse>> Extract(Guid accountId);
         Task<Result<DepositResponse>> Deposit(DepositRequest request);
+        Task<Result<WithdrawResponse>> Withdraw(WithdrawRequest request);
+
+        Task<Result<TransferResponse>> Transfer(TransferRequest request);
     }
 }

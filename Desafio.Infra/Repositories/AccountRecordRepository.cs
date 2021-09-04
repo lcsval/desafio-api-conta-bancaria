@@ -22,10 +22,10 @@ namespace Desafio.Infra.Repositories
         {
             var sql = @"
                 INSERT INTO accountRecords
-                    (accountid, value, type, tax, totalvalue)
+                    (accountid, operation, value, type, tax, totalvalue)
                 OUTPUT Inserted.id
                 VALUES
-                    (@accountid, @value, @type, @tax, @totalvalue)";
+                    (@accountid, @operation, @value, @type, @tax, @totalvalue)";
 
             var id = await _session.Connection.ExecuteScalarAsync<Guid>(sql, accRecord, _session.Transaction);
             var result = await _session.Connection.QueryFirstAsync<AccountRecord>($"SELECT * FROM accountrecords WHERE id = '{id}'", null, _session.Transaction);
@@ -34,7 +34,7 @@ namespace Desafio.Infra.Repositories
 
         public async Task<List<AccountRecord>> GetAll(Guid accountId)
         {
-            var sql = $"SELECT * FROM accountrecords where accountId = '{accountId}'";
+            var sql = $"SELECT * FROM accountrecords where accountId = '{accountId}' order by date desc";
 
             var result = await _session.Connection.QueryAsync<AccountRecord>(sql, null, _session.Transaction);
 

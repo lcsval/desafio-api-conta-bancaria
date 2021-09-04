@@ -52,6 +52,7 @@ namespace Desafio.Application.Services
                 var insertedAccRecord = await _accountRecordRepository.Create(new AccountRecord
                 {
                     AccountId = insertedAccount.Id,
+                    Operation = AccountOperationEnum.Nenhum,
                     Value = request.Balance,
                     Type = AccountTypeEnum.Credito,
                     Tax = 0,
@@ -99,41 +100,6 @@ namespace Desafio.Application.Services
             }
         }
 
-        //public async Task<Result<AccountResponse>> Update(Guid id, UpdateAccountRequest request)
-        //{
-        //    try
-        //    {
-        //        var account = await _accountRepository.GetById(id);
-        //        var validator = new UpdateAccountValidator(id, account != null);
-        //        var results = validator.Validate(request);
-        //        if (!results.IsValid)
-        //            return Result<AccountResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
-
-        //        _unitOfWork.BeginTransaction();
-        //        var updatedAccount = await _accountRepository.Update(new Account
-        //        {
-        //            Id = request.Id,
-        //            Name = request.Name,
-        //            Balance = request.Balance
-        //        });
-
-        //        var updatedAccRecord = await _accountRecordRepository.Create(new AccountRecord
-        //        {
-        //            AccountId = updatedAccount.Id,
-        //            Date = DateTime.Now,
-        //            Value = account.Balance - request.Balance,
-        //            //Type = (account.Balance - request.Balance) > account.Balance ? 
-        //        });
-        //        _unitOfWork.Commit();
-
-        //        return Result<AccountResponse>.Success(MapResponse(updatedAccount));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Result<AccountResponse>.Failure(new List<string> { ex.Message });
-        //    }
-        //}
-
         public async Task<Result<ExtractResponse>> Extract(Guid accountId)
         {
             try
@@ -176,6 +142,7 @@ namespace Desafio.Application.Services
                 var insertedAccRecord = await _accountRecordRepository.Create(new AccountRecord
                 {
                     AccountId = updatedAccount.Id,
+                    Operation = AccountOperationEnum.Deposito,
                     Value = request.Value,
                     Type = AccountTypeEnum.Credito,
                     Tax = tax,
@@ -196,6 +163,108 @@ namespace Desafio.Application.Services
             }
         }
 
+        public async Task<Result<WithdrawResponse>> Withdraw(WithdrawRequest request)
+        {
+            try
+            {
+                var account = await _accountRepository.GetById(request.AccountId);
+                var validator = new WithdrawValidator(account != null, account.Balance);
+                var results = validator.Validate(request);
+                if (!results.IsValid)
+                    return Result<WithdrawResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
+
+                decimal tax = 4;
+                decimal newBalance = account.Balance - (request.Value - tax);
+
+                _unitOfWork.BeginTransaction();
+                var updatedAccount = await _accountRepository.Update(new Account
+                {
+                    Id = account.Id,
+                    Name = account.Name,
+                    Balance = newBalance
+                });
+
+                var insertedAccRecord = await _accountRecordRepository.Create(new AccountRecord
+                {
+                    AccountId = updatedAccount.Id,
+                    Operation = AccountOperationEnum.Saque,
+                    Value = request.Value,
+                    Type = AccountTypeEnum.Debito,
+                    Tax = tax,
+                    TotalValue = (request.Value - tax)
+                });
+                _unitOfWork.Commit();
+
+                return Result<WithdrawResponse>.Success(new WithdrawResponse
+                {
+                    AccountId = updatedAccount.Id,
+                    Name = updatedAccount.Name,
+                    NewBalance = updatedAccount.Balance
+                });
+            }
+            catch (Exception ex)
+            {
+                return Result<WithdrawResponse>.Failure(new List<string> { ex.Message });
+            }
+        }
+
+        public async Task<Result<TransferResponse>> Transfer(TransferRequest request)
+        {
+            try
+            {
+                var originAccount = await _accountRepository.GetById(request.OriginAccountId);
+                var destinationAccount = await _accountRepository.GetById(request.DestinationAccountId);
+
+                var validator = new TransferValidator(originAccount != null, destinationAccount != null, originAccount.Balance);
+                var results = validator.Validate(request);
+                if (!results.IsValid)
+                    return Result<TransferResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
+
+                decimal tax = 1;
+                decimal originAccountNewBalance = originAccount.Balance - (request.Value - tax);
+                decimal destinationAccountNewBalance = destinationAccount.Balance + (request.Value - tax);
+
+                _unitOfWork.BeginTransaction();
+                await RegisterTransfer(request.Value, originAccount, tax, originAccountNewBalance, AccountTypeEnum.Debito);
+                await RegisterTransfer(request.Value, destinationAccount, tax, destinationAccountNewBalance, AccountTypeEnum.Credito);
+                _unitOfWork.Commit();
+
+                return Result<TransferResponse>.Success(new TransferResponse
+                {
+                    OriginAccountId = originAccount.Id,
+                    OriginAccountName = originAccount.Name,
+                    OriginAccountNewBalance = originAccountNewBalance,
+                    DestinationAccountId = destinationAccount.Id,
+                    DestinationAccountName = destinationAccount.Name,
+                    DestinationAccountNewBalance = destinationAccountNewBalance,
+                });
+            }
+            catch (Exception ex)
+            {
+                return Result<TransferResponse>.Failure(new List<string> { ex.Message });
+            }
+        }
+
+        private async Task RegisterTransfer(decimal value, Account account, decimal tax, decimal newBalance, string type)
+        {
+            var updatedAccount = await _accountRepository.Update(new Account
+            {
+                Id = account.Id,
+                Name = account.Name,
+                Balance = newBalance
+            });
+
+            var insertedAccRecord = await _accountRecordRepository.Create(new AccountRecord
+            {
+                AccountId = updatedAccount.Id,
+                Operation = AccountOperationEnum.Transferencia,
+                Value = value,
+                Type = type,
+                Tax = tax,
+                TotalValue = (value - tax)
+            });
+        }
+
         #region Maps
 
         private async Task<ExtractResponse> MapExtractResultsResponse(Guid accountId, Account account)
@@ -208,9 +277,11 @@ namespace Desafio.Application.Services
                 rcs.Add(new AccountRecordResponse
                 {
                     Date = acc.Date,
+                    Operation = acc.Operation,
                     Value = acc.Value,
                     Type = acc.Type,
-                    Tax = acc.Tax
+                    Tax = acc.Tax,
+                    TotalValue = acc.TotalValue,
                 });
             };
 

@@ -67,5 +67,26 @@ namespace Desafio.WebApi.Controllers
             var result = await _accountService.Deposit(request);
             return result;
         }
+
+
+        [HttpPost("Withdraw")]
+        public async Task<Result<WithdrawResponse>> Withdraw
+        (
+            [FromBody] WithdrawRequest request
+        )
+        {
+            var result = await _accountService.Withdraw(request);
+            return result;
+        }
+
+        [HttpPost("Transfer")]
+        public async Task<Result<TransferResponse>> Transfer
+        (
+            [FromBody] TransferRequest request
+        )
+        {
+            var result = await _accountService.Transfer(request);
+            return result;
+        }
     }
 }
