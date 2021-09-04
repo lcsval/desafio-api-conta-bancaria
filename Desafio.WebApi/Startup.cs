@@ -1,20 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Desafio.Application.Services;
 using Desafio.Domain.Interfaces;
 using Desafio.Domain.Interfaces.Repositories;
+using Desafio.Domain.Interfaces.Services;
 using Desafio.Infra;
 using Desafio.Infra.Persistence;
 using Desafio.Infra.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 namespace Desafio.WebApi
@@ -51,7 +46,10 @@ namespace Desafio.WebApi
             services.AddScoped<DbSession>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
 
-            services.AddTransient<ICustomerRepository, CustomerRepository>();
+            services.AddTransient<IAccountRepository, AccountRepository>();
+            services.AddTransient<IAccountRecordRepository, AccountRecordRepository>();
+
+            services.AddTransient<IAccountService, AccountService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

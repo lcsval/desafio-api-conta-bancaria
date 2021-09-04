@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Desafio.Domain.Entities
+namespace Desafio.Domain.Requests.Customer
 {
-    public class Account
+    public class UpdateAccountRequest
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

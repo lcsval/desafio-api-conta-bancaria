@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Desafio.Domain.Entities
+namespace Desafio.Domain.Responses
 {
-    public class Account
+    public class AccountResponse
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
