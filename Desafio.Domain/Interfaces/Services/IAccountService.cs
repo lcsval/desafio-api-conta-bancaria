@@ -1,4 +1,5 @@
-﻿using Desafio.Domain.Requests.Customer;
+﻿using Desafio.Domain.Requests;
+using Desafio.Domain.Requests.Customer;
 using Desafio.Domain.Responses;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace Desafio.Domain.Interfaces.Services
         Task<Result<List<AccountResponse>>> GetAll();
         Task<Result<AccountResponse>> GetById(Guid id);
         Task<Result<AccountResponse>> Create(CreateAccountRequest request);
-        Task<Result<AccountResponse>> Update(Guid id, UpdateAccountRequest request);
+        //Task<Result<AccountResponse>> Update(Guid id, UpdateAccountRequest request);
+        Task<Result<ExtractResponse>> Extract(Guid accountId);
+        Task<Result<DepositResponse>> Deposit(DepositRequest request);
     }
 }

@@ -22,10 +22,10 @@ namespace Desafio.Infra.Repositories
         {
             var sql = @"
                 INSERT INTO accountRecords
-                    (accountid, value, type)
+                    (accountid, value, type, tax, totalvalue)
                 OUTPUT Inserted.id
                 VALUES
-                    (@accountid, @value, @type)";
+                    (@accountid, @value, @type, @tax, @totalvalue)";
 
             var id = await _session.Connection.ExecuteScalarAsync<Guid>(sql, accRecord, _session.Transaction);
             var result = await _session.Connection.QueryFirstAsync<AccountRecord>($"SELECT * FROM accountrecords WHERE id = '{id}'", null, _session.Transaction);

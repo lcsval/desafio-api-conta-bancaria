@@ -1,5 +1,6 @@
 ﻿using Desafio.Domain;
 using Desafio.Domain.Interfaces.Services;
+using Desafio.Domain.Requests;
 using Desafio.Domain.Requests.Customer;
 using Desafio.Domain.Responses;
 using Microsoft.AspNetCore.Mvc;
@@ -20,15 +21,15 @@ namespace Desafio.WebApi.Controllers
             _accountService = accountService;
         }
 
-        [HttpGet("GetAll")]
-        public async Task<Result<List<AccountResponse>>> GetAll()
+        [HttpGet("GetAllAccounts")]
+        public async Task<Result<List<AccountResponse>>> GetAllAccounts()
         {
             var result = await _accountService.GetAll();
             return result;
         }
 
-        [HttpGet("GetById/{id}")]
-        public async Task<Result<AccountResponse>> GetById
+        [HttpGet("GetAccountById/{id}")]
+        public async Task<Result<AccountResponse>> GetAccountById
         (
             [FromRoute] Guid id
         )
@@ -37,8 +38,8 @@ namespace Desafio.WebApi.Controllers
             return result;
         }
 
-        [HttpPost("Create")]
-        public async Task<Result<AccountResponse>> Create
+        [HttpPost("CreateAccount")]
+        public async Task<Result<AccountResponse>> CreateAccount
         (
             [FromBody] CreateAccountRequest request
         )
@@ -47,15 +48,24 @@ namespace Desafio.WebApi.Controllers
             return result;
         }
 
-        //[HttpPut("Update/{id}")]
-        //public async Task<Result<AccountResponse>> Update
-        //(
-        //    [FromRoute] Guid id,
-        //    [FromBody] UpdateAccountRequest request
-        //)
-        //{
-        //    var result = await _accountService.Update(id, request);
-        //    return result;
-        //}
+        [HttpGet("Extract/{accountId}")]
+        public async Task<Result<ExtractResponse>> Extract
+        (
+            [FromRoute] Guid accountId
+        )
+        {
+            var result = await _accountService.Extract(accountId);
+            return result;
+        }
+
+        [HttpPost("Deposit")]
+        public async Task<Result<DepositResponse>> Deposit
+        (
+            [FromBody] DepositRequest request
+        )
+        {
+            var result = await _accountService.Deposit(request);
+            return result;
+        }
     }
 }

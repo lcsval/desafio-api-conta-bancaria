@@ -49,7 +49,7 @@ namespace Desafio.WebApi
             services.AddTransient<IAccountRepository, AccountRepository>();
             services.AddTransient<IAccountRecordRepository, AccountRecordRepository>();
 
-            services.AddTransient<IAccountService, AccountService>();
+            services.AddTransient<IAccountService, BankService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

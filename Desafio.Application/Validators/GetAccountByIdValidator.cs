@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using System;
 
-namespace Desafio.Application.Validators.Account
+namespace Desafio.Application.Validators
 {
     public class GetAccountByIdValidator : AbstractValidator<Guid>
     {

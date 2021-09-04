@@ -8,11 +8,12 @@ CREATE TABLE accountrecords (
 	id UNIQUEIDENTIFIER PRIMARY KEY default NEWID(),
 	accountid UNIQUEIDENTIFIER NOT NULL,
 	date DATETIME DEFAULT GETDATE(),
-	value decimal(9,2),
     type varchar(7) NOT NULL,
+	value decimal(9,2) NOT NULL,
+    tax decimal(9,2) NOT NULL,
+    totalvalue decimal(9,2) NOT NULL,
 	FOREIGN KEY (accountid) REFERENCES accounts(id)
 );
-
 
 
 INSERT INTO accounts (name, balance) VALUES ('Conta1', 100);

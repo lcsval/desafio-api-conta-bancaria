@@ -1,10 +1,11 @@
-﻿using Desafio.Application.Validators.Account;
+﻿using Desafio.Application.Validators;
 using Desafio.Domain;
 using Desafio.Domain.Entities;
 using Desafio.Domain.Enums;
 using Desafio.Domain.Interfaces;
 using Desafio.Domain.Interfaces.Repositories;
 using Desafio.Domain.Interfaces.Services;
+using Desafio.Domain.Requests;
 using Desafio.Domain.Requests.Customer;
 using Desafio.Domain.Responses;
 using System;
@@ -14,13 +15,13 @@ using System.Threading.Tasks;
 
 namespace Desafio.Application.Services
 {
-    public class AccountService : IAccountService
+    public class BankService : IAccountService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAccountRepository _accountRepository;
         private readonly IAccountRecordRepository _accountRecordRepository;
 
-        public AccountService
+        public BankService
         (
             IUnitOfWork unitOfWork,
             IAccountRepository accountRepository,
@@ -53,6 +54,8 @@ namespace Desafio.Application.Services
                     AccountId = insertedAccount.Id,
                     Value = request.Balance,
                     Type = AccountTypeEnum.Credito,
+                    Tax = 0,
+                    TotalValue = request.Balance
                 });
                 _unitOfWork.Commit();
 
@@ -96,39 +99,127 @@ namespace Desafio.Application.Services
             }
         }
 
-        public async Task<Result<AccountResponse>> Update(Guid id, UpdateAccountRequest request)
+        //public async Task<Result<AccountResponse>> Update(Guid id, UpdateAccountRequest request)
+        //{
+        //    try
+        //    {
+        //        var account = await _accountRepository.GetById(id);
+        //        var validator = new UpdateAccountValidator(id, account != null);
+        //        var results = validator.Validate(request);
+        //        if (!results.IsValid)
+        //            return Result<AccountResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
+
+        //        _unitOfWork.BeginTransaction();
+        //        var updatedAccount = await _accountRepository.Update(new Account
+        //        {
+        //            Id = request.Id,
+        //            Name = request.Name,
+        //            Balance = request.Balance
+        //        });
+
+        //        var updatedAccRecord = await _accountRecordRepository.Create(new AccountRecord
+        //        {
+        //            AccountId = updatedAccount.Id,
+        //            Date = DateTime.Now,
+        //            Value = account.Balance - request.Balance,
+        //            //Type = (account.Balance - request.Balance) > account.Balance ? 
+        //        });
+        //        _unitOfWork.Commit();
+
+        //        return Result<AccountResponse>.Success(MapResponse(updatedAccount));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Result<AccountResponse>.Failure(new List<string> { ex.Message });
+        //    }
+        //}
+
+        public async Task<Result<ExtractResponse>> Extract(Guid accountId)
         {
             try
             {
-                var account = await _accountRepository.GetById(id);
-                var validator = new UpdateAccountValidator(id, account != null);
+                var account = await _accountRepository.GetById(accountId);
+                var validator = new ExtractValidator(account != null);
+                var results = validator.Validate(accountId);
+                if (!results.IsValid)
+                    return Result<ExtractResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
+
+                return Result<ExtractResponse>.Success(await MapExtractResultsResponse(accountId, account));
+            }
+            catch (Exception ex)
+            {
+                return Result<ExtractResponse>.Failure(new List<string> { ex.Message });
+            }
+        }
+
+        public async Task<Result<DepositResponse>> Deposit(DepositRequest request)
+        {
+            try
+            {
+                var account = await _accountRepository.GetById(request.AccountId);
+                var validator = new DepositValidator(account != null);
                 var results = validator.Validate(request);
                 if (!results.IsValid)
-                    return Result<AccountResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
+                    return Result<DepositResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
+
+                decimal tax = (request.Value * 1) / 100;
+                decimal newBalance = account.Balance + (request.Value - tax);
 
                 _unitOfWork.BeginTransaction();
                 var updatedAccount = await _accountRepository.Update(new Account
                 {
-                    Id = request.Id,
-                    Name = request.Name,
-                    Balance = request.Balance
+                    Id = account.Id,
+                    Name = account.Name,
+                    Balance = newBalance
                 });
 
-                var updatedAccRecord = await _accountRecordRepository.Create(new AccountRecord
+                var insertedAccRecord = await _accountRecordRepository.Create(new AccountRecord
                 {
                     AccountId = updatedAccount.Id,
-                    Date = DateTime.Now,
-                    Value = account.Balance - request.Balance,
-                    //Type = (account.Balance - request.Balance) > account.Balance ? 
+                    Value = request.Value,
+                    Type = AccountTypeEnum.Credito,
+                    Tax = tax,
+                    TotalValue = (request.Value - tax)
                 });
                 _unitOfWork.Commit();
 
-                return Result<AccountResponse>.Success(MapResponse(updatedAccount));
+                return Result<DepositResponse>.Success(new DepositResponse
+                {
+                    AccountId = updatedAccount.Id,
+                    Name = updatedAccount.Name,
+                    NewBalance = updatedAccount.Balance
+                });
             }
             catch (Exception ex)
             {
-                return Result<AccountResponse>.Failure(new List<string> { ex.Message });
+                return Result<DepositResponse>.Failure(new List<string> { ex.Message });
             }
+        }
+
+        #region Maps
+
+        private async Task<ExtractResponse> MapExtractResultsResponse(Guid accountId, Account account)
+        {
+            var accountRecords = await _accountRecordRepository.GetAll(accountId);
+
+            var rcs = new List<AccountRecordResponse>();
+            foreach (var acc in accountRecords)
+            {
+                rcs.Add(new AccountRecordResponse
+                {
+                    Date = acc.Date,
+                    Value = acc.Value,
+                    Type = acc.Type,
+                    Tax = acc.Tax
+                });
+            };
+
+            var result = new ExtractResponse();
+            result.AccountId = account.Id;
+            result.Name = account.Name;
+            result.Balance = account.Balance;
+            result.Records = rcs;
+            return result;
         }
 
         private static AccountResponse MapResponse(Account account)
@@ -157,5 +248,7 @@ namespace Desafio.Application.Services
 
             return response;
         }
+
+        #endregion Maps
     }
 }
