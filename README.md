@@ -15,19 +15,31 @@ O banco de dados utilizado foi um sql server. Utilizei docker e subi uma instân
   ```
 
 * Criar o DB (executar os passos): 
-1. docker exec -it sqlserver "bash"
-2. /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "123456X@_"
-3. CREATE DATABASE desafiodb 
-4. escrever: GO
+1. ```
+  docker exec -it sqlserver "bash"
+  ```
+  
+2. ```
+  /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "123456X@_"
+  ```
+  
+3. ```
+  CREATE DATABASE desafiodb 
+  ```
+  
+4. escrever: 
+  ```
+  GO
+  ```
 
 # Endpoints
 1. /api/Bank/CreateAccount (POST) - Informar um nome e o valor inicial -> Cria uma nova conta  
-ˋˋˋ
+```
 {
   "name": "string",
   "balance": 0
 }
-ˋˋˋ
+```
 
 2. /api/Bank/GetAllAccounts (GET) - Nenhum paramêtro precisa ser informado -> Obtém todas as contas existentes
 
@@ -36,29 +48,26 @@ O banco de dados utilizado foi um sql server. Utilizei docker e subi uma instân
 4. /api/Bank/Extract/{accountId} (GET) - Informar o id da conta -> Obtém um extrato com o saldo atual e todas as movimentações
 
 5. /api/Bank/Deposit (POST) - Informar o id da conta e o valor que será depositado -> Será depositado o valor mediante a taxas na conta informada  
-ˋˋˋ
+```
 {
   "accountId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "value": 0
 }
-ˋˋˋ
+```
 
 6. /api/Bank/Withdraw (POST) - Informar o id da conta e o valor que será sacado -> Será sacado o valor mediante a taxas na conta informada  
-ˋˋˋ
+```
 {
   "accountId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "value": 0
 }
-ˋˋˋ
+```
 
 7. /api/Bank/Transfer (POST) - Informar o id da conta origem e o id da conta destino, e o valor que será transferido -> Será transferido o valor mediante taxas da conta origem para a conta destino  
-ˋˋˋ
+```
 {
   "originAccountId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "destinationAccountId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "value": 0
 }
-ˋˋˋ
-
-
-
+```
