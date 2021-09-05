@@ -2,7 +2,8 @@
 
 # Informações
 A api foi construída com .netcore 5 pois a versão 2.2 está descontinuada e não é recomendada seu uso.
-O banco de dados utilizado foi um sql server. Utilizei docker e subi uma instância de um sql server. Seguir o guia abaixo:
+Os testes unitários estão na camada de test. Só construí testes para a camada de aplicação, devido ao tempo e também porque é lá que se encontram as regras do negócio.
+O banco de dados utilizado foi sql server. Utilizei docker e subi uma instância de um sql server. Seguir o guia abaixo:
 
 * Criar o container docker do sqlserver local:  
   ```
