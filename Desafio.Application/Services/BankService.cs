@@ -168,7 +168,7 @@ namespace Desafio.Application.Services
             try
             {
                 var account = await _accountRepository.GetById(request.AccountId);
-                var validator = new WithdrawValidator(account != null, account.Balance);
+                var validator = new WithdrawValidator(account != null, account?.Balance);
                 var results = validator.Validate(request);
                 if (!results.IsValid)
                     return Result<WithdrawResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));
@@ -215,7 +215,7 @@ namespace Desafio.Application.Services
                 var originAccount = await _accountRepository.GetById(request.OriginAccountId);
                 var destinationAccount = await _accountRepository.GetById(request.DestinationAccountId);
 
-                var validator = new TransferValidator(originAccount != null, destinationAccount != null, originAccount.Balance);
+                var validator = new TransferValidator(originAccount != null, destinationAccount != null, originAccount?.Balance);
                 var results = validator.Validate(request);
                 if (!results.IsValid)
                     return Result<TransferResponse>.Failure(results.Errors.Select(s => s.ErrorMessage));

@@ -280,5 +280,183 @@ namespace Desafio.Tests.Application.Tests.Services
             Assert.True(result.Errors.Count() > 0);
             Assert.True(result.Errors.ToList()[0] == "Exception of type 'System.Exception' was thrown.");
         }
+
+        [Fact]
+        public async Task Should_Withdraw()
+        {
+            var request = _fixture.Build<WithdrawRequest>()
+                .With(w => w.Value, 2)
+                .Create();
+
+            var account = _fixture.Build<Account>()
+                .With(w => w.Balance, 2000)
+                .Create();
+
+            var accountRecord = _fixture.Create<AccountRecord>();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()))
+                .ReturnsAsync(account);
+
+            _accountRepositoryMock
+                .Setup(x => x.Update(It.IsAny<Account>()))
+                .ReturnsAsync(account);
+
+            _accountRecordRepositoryMock
+                .Setup(x => x.Create(accountRecord))
+                .ReturnsAsync(accountRecord);
+
+            var result = await _bankService.Withdraw(request);
+
+            Assert.True(result.Succeeded);
+            Assert.IsType<WithdrawResponse>(result.Data);
+            Assert.False(result.Errors.Any());
+        }
+
+        [Fact]
+        public async Task Should_Not_Withdraw_Because_Account_Is_Invalid()
+        {
+            var request = _fixture.Create<WithdrawRequest>();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()));
+
+            var result = await _bankService.Withdraw(request);
+
+            Assert.Null(result.Data);
+            Assert.True(result.Errors.Count() > 0);
+            Assert.True(result.Errors.ToList()[0] == "A conta informada não existe ou não é válida");
+        }
+
+        [Fact]
+        public async Task Should_Not_Withdraw_Because_Validation_Failure()
+        {
+            var request = _fixture.Build<WithdrawRequest>()
+                .With(w => w.AccountId, Guid.Empty)
+                .With(w => w.Value, -12)
+                .Create();
+
+            var result = await _bankService.Withdraw(request);
+
+            Assert.Null(result.Data);
+            Assert.True(result.Errors.Count() > 0);
+            Assert.True(result.Errors.ToList()[0] == "A conta informada não existe ou não é válida");
+            Assert.True(result.Errors.ToList()[1] == "[Valor] O valor sacado deve ser maior que zero");
+        }
+
+        [Fact]
+        public async Task Should_Not_Withdraw_Because_Exception()
+        {
+            var request = _fixture.Create<WithdrawRequest>();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()))
+                .ThrowsAsync(new Exception());
+
+            var result = await _bankService.Withdraw(request);
+
+            Assert.Null(result.Data);
+            Assert.True(result.Errors.Count() > 0);
+            Assert.True(result.Errors.ToList()[0] == "Exception of type 'System.Exception' was thrown.");
+        }
+
+        [Fact]
+        public async Task Should_Transfer()
+        {
+            var request = _fixture.Build<TransferRequest>()
+                .With(w => w.Value, 20)
+                .Create();
+
+            var originAccount = _fixture.Build<Account>()
+                .With(w => w.Balance, 2000)
+                .Create();
+
+            var destinationAccount = _fixture.Build<Account>()
+                .With(w => w.Balance, 1000)
+                .Create();
+
+            var accountRecord = _fixture.Create<AccountRecord>();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()))
+                .ReturnsAsync(originAccount);
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()))
+                .ReturnsAsync(destinationAccount);
+
+            _accountRepositoryMock
+                .Setup(x => x.Update(It.IsAny<Account>()))
+                .ReturnsAsync(originAccount);
+
+            _accountRepositoryMock
+                .Setup(x => x.Update(It.IsAny<Account>()))
+                .ReturnsAsync(destinationAccount);
+
+            _accountRecordRepositoryMock
+                .Setup(x => x.Create(accountRecord))
+                .ReturnsAsync(accountRecord);
+
+            var result = await _bankService.Transfer(request);
+
+            Assert.True(result.Succeeded);
+            Assert.IsType<TransferResponse>(result.Data);
+            Assert.False(result.Errors.Any());
+        }
+
+        [Fact]
+        public async Task Should_Not_Transfer_Because_Accounts_Is_Invalid()
+        {
+            var request = _fixture.Create<TransferRequest>();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()));
+
+            var result = await _bankService.Transfer(request);
+
+            Assert.Null(result.Data);
+            Assert.True(result.Errors.Count() > 0);
+            Assert.True(result.Errors.ToList()[0] == "A conta de origem informada não existe ou não é válida");
+            Assert.True(result.Errors.ToList()[1] == "A conta de destino informada não existe ou não é válida");
+        }
+
+        [Fact]
+        public async Task Should_Not_Transfer_Because_Validation_Failure()
+        {
+            var request = _fixture.Build<TransferRequest>()
+                .With(w => w.Value, -12)
+                .Create();
+
+            var originAccount = _fixture.Build<Account>()
+                .With(w => w.Balance, -13)
+                .Create();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()))
+                .ReturnsAsync(originAccount);
+
+            var result = await _bankService.Transfer(request);
+
+            Assert.Null(result.Data);
+            Assert.True(result.Errors.Count() > 0);
+            Assert.True(result.Errors.ToList()[0] == "[Valor] O valor para transferência deve ser maior que zero");
+            Assert.True(result.Errors.ToList()[1] == "[Valor] O valor para transferência é maior que o saldo da conta de origem");
+        }
+
+        [Fact]
+        public async Task Should_Not_Transfer_Because_Exception()
+        {
+            var request = _fixture.Create<TransferRequest>();
+
+            _accountRepositoryMock
+                .Setup(x => x.GetById(It.IsAny<Guid>()))
+                .ThrowsAsync(new Exception());
+
+            var result = await _bankService.Transfer(request);
+
+            Assert.Null(result.Data);
+            Assert.True(result.Errors.Count() > 0);
+            Assert.True(result.Errors.ToList()[0] == "Exception of type 'System.Exception' was thrown.");
+        }
     }
 }

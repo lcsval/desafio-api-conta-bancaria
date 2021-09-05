@@ -5,7 +5,7 @@ namespace Desafio.Application.Validators
 {
     public class WithdrawValidator : AbstractValidator<WithdrawRequest>
     {
-        public WithdrawValidator(bool validAccount, decimal balance)
+        public WithdrawValidator(bool validAccount, decimal? balance = 0)
         {
             RuleFor(r => r).Custom((entity, context) =>
             {

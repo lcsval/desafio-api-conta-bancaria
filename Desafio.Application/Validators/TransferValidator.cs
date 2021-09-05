@@ -5,7 +5,7 @@ namespace Desafio.Application.Validators
 {
     public class TransferValidator : AbstractValidator<TransferRequest>
     {
-        public TransferValidator(bool validOriginAccount, bool validDestinationAccount, decimal balanceOriginAccount)
+        public TransferValidator(bool validOriginAccount, bool validDestinationAccount, decimal? balanceOriginAccount = 0)
         {
             RuleFor(r => r).Custom((entity, context) =>
             {
