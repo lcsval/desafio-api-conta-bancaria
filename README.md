@@ -15,15 +15,18 @@ O banco de dados utilizado foi um sql server. Utilizei docker e subi uma instân
   ```
 
 * Criar o DB (executar os passos): 
-1. ```
+1. 
+  ```
   docker exec -it sqlserver "bash"
   ```
   
-2. ```
+2. 
+  ```
   /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "123456X@_"
   ```
   
-3. ```
+3. 
+  ```
   CREATE DATABASE desafiodb 
   ```
   
